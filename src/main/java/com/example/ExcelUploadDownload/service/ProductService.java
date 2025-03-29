@@ -7,11 +7,9 @@ import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.util.List;
 import java.util.Map;
 
@@ -71,7 +69,7 @@ public class ProductService {
         return headerStyle;
     }
 
-    public ResponseEntity<Map<String, String>> generateLinkForExcel(HttpServletRequest request) throws IOException {
+    public ResponseEntity<?> generateLinkForExcel(HttpServletRequest request) throws IOException {
 
         String fileName = "data.xlsx";
         String filePath = System.getProperty("user.dir") + File.separator + fileName;
@@ -112,5 +110,40 @@ public class ProductService {
         System.out.println(downloadUrl);
         return ResponseEntity.ok(Map.of("Download link ", downloadUrl));
 
+    }
+
+    public ResponseEntity<?> saveExcelFile(MultipartFile file) {
+
+        if (file.isEmpty()) {
+            String message = "Please upload a valid Excel file.";
+            return ResponseEntity.badRequest().body(Map.of("message", message, "status", HttpStatus.BAD_REQUEST));
+        }
+
+        try (
+                InputStream inputStream = file.getInputStream();
+                Workbook workbook = new XSSFWorkbook(inputStream)
+        ) {
+            boolean isHeader = true;
+            Sheet sheet = workbook.getSheetAt(0);
+
+            for (Row row : sheet) {
+                if (isHeader) {
+                    isHeader = false;
+                    continue;
+                }
+
+                Product pd = new Product(
+                        row.getCell(0).getRowIndex(),
+                        row.getCell(1).getStringCellValue(),
+                        row.getCell(2).getNumericCellValue()
+                );
+
+                //as we don't have database currently that we just print here
+                System.out.println("values :" + pd);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return ResponseEntity.ok().body(Map.of("message", "File Uploaded", "status", HttpStatus.OK));
     }
 }
