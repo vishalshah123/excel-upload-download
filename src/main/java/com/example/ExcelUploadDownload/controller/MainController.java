@@ -1,6 +1,7 @@
 package com.example.ExcelUploadDownload.controller;
 
 import com.example.ExcelUploadDownload.service.ProductService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,4 +25,11 @@ public class MainController {
 //                .contentType(MediaType.APPLICATION_OCTET_STREAM)
 //                .body(excelData);
     }
+
+    @GetMapping("/generate-link-for-excel")
+    public ResponseEntity<?> generateLinkForExcel(HttpServletRequest request) throws IOException {
+        return productService.generateLinkForExcel(request);
+    }
+
+
 }
